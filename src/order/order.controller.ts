@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/order.dto';
 import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Controller('orders')
 export class OrderController {
   private readonly logger = new Logger(OrderController.name);
 
   constructor(
+    @InjectQueue('mail-queue') private readonly mailQueue: Queue,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
   ) {}
@@ -36,6 +39,8 @@ export class OrderController {
 
     await this.orderRepository.save(order);
     this.logger.log(`Order ${createOrderDto.orderId} saved to database`);
+
+    void this.mailQueue.add('send-order-confirmation', createOrderDto);
 
     this.logger.log(`Flow created for order ${createOrderDto.orderId}`);
 
