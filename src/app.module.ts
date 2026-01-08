@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { OrderItem } from './order/entities/order-item.entity';
 import { Order } from './order/entities/order.entity';
 import { OrderModule } from './order/order.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -23,6 +24,16 @@ import { OrderModule } from './order/order.module';
         database: configService.get<string>('DB_NAME'),
         entities: [Order, OrderItem],
         synchronize: true, // Set to false in production
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+        },
       }),
       inject: [ConfigService],
     }),
