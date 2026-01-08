@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BullModule } from '@nestjs/bullmq';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MailQueueModule } from './mail-queue/mail-queue.module';
-import { OrderModule } from './order/order.module';
-import { Order } from './order/entities/order.entity';
 import { OrderItem } from './order/entities/order-item.entity';
+import { Order } from './order/entities/order.entity';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -28,17 +26,6 @@ import { OrderItem } from './order/entities/order-item.entity';
       }),
       inject: [ConfigService],
     }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        connection: {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get('REDIS_PORT', 6379),
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    MailQueueModule,
     OrderModule,
   ],
   controllers: [AppController],
